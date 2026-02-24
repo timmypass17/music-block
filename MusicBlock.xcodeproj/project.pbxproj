@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		32EAF8C82F4E4A3C00739B68 /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = 32EAF8C72F4E4A3C00739B68 /* .gitignore */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		32E59F362F4D41A2008EC9B3 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,6 +31,7 @@
 		32E59F282F4D41A0008EC9B3 /* MusicBlock.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MusicBlock.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		32E59F352F4D41A2008EC9B3 /* MusicBlockTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MusicBlockTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		32E59F3F2F4D41A2008EC9B3 /* MusicBlockUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MusicBlockUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		32EAF8C72F4E4A3C00739B68 /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -75,6 +80,7 @@
 		32E59F1F2F4D41A0008EC9B3 = {
 			isa = PBXGroup;
 			children = (
+				32EAF8C72F4E4A3C00739B68 /* .gitignore */,
 				32E59F2A2F4D41A0008EC9B3 /* MusicBlock */,
 				32E59F382F4D41A2008EC9B3 /* MusicBlockTests */,
 				32E59F422F4D41A2008EC9B3 /* MusicBlockUITests */,
@@ -212,6 +218,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				32EAF8C82F4E4A3C00739B68 /* .gitignore in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
