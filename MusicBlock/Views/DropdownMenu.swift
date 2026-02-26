@@ -1,5 +1,5 @@
 //
-//  DropdownNoteMenu.swift
+//  DropdownMenu.swift
 //  MusicBlock
 //
 //  Created by Timmy Nguyen on 2/23/26.
@@ -7,16 +7,25 @@
 
 import SwiftUI
 
-struct DropdownNoteMenu: View {
-    @Binding var selectedDuration: NoteDuration
-    @Binding var selectedNote: Note
-    
+struct DropdownMenu: View {
+    @EnvironmentObject var workspace: BlockWorkspace
+//    @Binding var selectedNote: NoteDuration
     @State var isExpanded = false
     @State var menuWidth: CGFloat = 0
+    let blockID: UUID
     var icon = "ellipsis"
     var dropDownAlignment: DropdownAlignent = .center
     var iconOnly: Bool = true
     var fromTop: Bool = false
+    
+    var noteBlock: NoteBlock {
+        get {
+            return workspace.blocks[blockID] as! NoteBlock
+        }
+        set {
+            workspace.blocks[blockID] = newValue
+        }
+    }
     
     var transitionAnchor: UnitPoint {
         if fromTop {
@@ -36,13 +45,18 @@ struct DropdownNoteMenu: View {
             return .trailing
         }
     }
-        
+    
+    let options: [DropdownOption]
+    
     var body: some View {
         ZStack {
             Button {
                 isExpanded.toggle()
+                workspace.selectedBlockID = blockID
             } label: {
-                Text(selectedNote.description)
+                Image(noteBlock.note.duration.iconName)
+                    .resizable()
+                    .scaledToFit()
                     .frame(width: 30, height: 30)
                     .padding(4)
                     .background(.white, in: RoundedRectangle(cornerRadius: 16))
@@ -52,29 +66,27 @@ struct DropdownNoteMenu: View {
             .frame(height: 50)
             .overlay(alignment: fromTop ? .bottom : .top) {
                 if isExpanded {
-                    VStack(alignment: .center, spacing: 8) {
-                        Button {
-                            let index = (selectedNote.index + 1) % Note.allCases.count
-                            selectedNote = Note(rawValue: index)!
-                            print(index)
-                        } label: {
-                            Image(systemName: "chevron.up")
-                        }
-
-                        SpriteView(
-                            imageName: "notes",
-                            index: selectedNote.index,
-                            spriteWidth: 490 / 13,
-                            spriteHeight: 109
-                        )
-//                        .offset(x: (490/2))
-                        
-                        Button {
-                            let index = (selectedNote.index - 1 + Note.allCases.count) % Note.allCases.count
-                            print(index)
-                            selectedNote = Note(rawValue: index)!
-                        } label: {
-                            Image(systemName: "chevron.down")
+                    VStack(alignment: .leading, spacing: 8) {
+                        ForEach(options) { option in
+                            HStack(spacing: 8) {
+                                Image(option.duration.iconName)
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 20, height: 20)
+                            }
+//                            .foregroundStyle(option.color)
+                            .padding(.vertical, 5)
+                            .onTapGesture {
+                                if var block = workspace.blocks[blockID] as? NoteBlock {
+                                    block.note.duration = option.duration
+                                    workspace.blocks[blockID] = block
+                                    workspace.selectedBlockID = blockID
+                                }
+                                option.action()
+                                withAnimation {
+                                    isExpanded = false
+                                }
+                            }
                         }
                     }
                     .padding()
@@ -85,6 +97,7 @@ struct DropdownNoteMenu: View {
                     )
                     .offset(y: fromTop ? -50 : 50)
                     .fixedSize() // w/o swiftUI might try to compress layout
+//                    .zIndex(Double(noteBlock.note.index))
 //                    .transition(
 //                        .scale(scale: 0, anchor: transitionAnchor)
 //                        .combined(with: .opacity)
@@ -103,60 +116,45 @@ struct DropdownNoteMenu: View {
             }
         }
         .frame(width: 30, height: 30)
-//        .frame(width: menuWidth)
 //        .frame(maxWidth: .infinity, alignment: frameAlignment)
         .animation(.smooth, value: isExpanded)
     }
 }
 
 //#Preview {
-//    DropdownNoteMenu()
+//    DropdownMenu(dropDownAlignment: .trailing, fromTop: false, options: [
+//    ])
 //}
 
-enum Note: Int, CaseIterable, CustomStringConvertible {
-    case c3, d3, e3, f3, g3, a3, b3, c4, d4, e4, f4, g4, a4
-    
-    var index: Int {
-        return self.rawValue
-    }
-    
-    var description: String {
-        switch self {
-        case .c3: "C3"
-        case .d3: "D3"
-        case .e3: "E3"
-        case .f3: "F3"
-        case .g3: "G3"
-        case .a3: "A3"
-        case .b3: "B3"
-        case .c4: "C4"
-        case .d4: "D4"
-        case .e4: "E4"
-        case .f4: "F4"
-        case .g4: "G4"
-        case .a4: "A4"
-        }
-    }
+struct DropdownOption: Identifiable {
+    let id = UUID()
+    var duration: NoteDuration
+    var action: () -> Void
 }
 
-struct SpriteView: View {
-    let imageName: String
-    let index: Int        // which image you want to show
-    let spriteWidth: CGFloat    // single sprite
-    let spriteHeight: CGFloat
+enum DropdownAlignent {
+    case leading, center, trailing
+}
 
-    var body: some View {
-        Image(imageName)
-            .resizable()
-            .frame(width: spriteWidth * totalSprites, height: spriteHeight) // load entire sprite sheet
-//            .border(.orange)
-            .frame(width: spriteWidth, height: spriteHeight, alignment: .leading)
-            .offset(x: -CGFloat(index) * spriteWidth)
-        //            .border(.blue)
-            .clipped()
-    }
-
-    var totalSprites: CGFloat {
-        13 // number of images inside the sprite sheet
+enum NoteDuration: Double, CaseIterable {
+    case whole = 4
+    case half = 2
+    case quarter = 1     // 1 beat
+    case eighth = 0.5
+    case sixteenth = 0.25
+    
+    var iconName: String {
+        switch self {
+        case .whole:
+            return "whole"
+        case .half:
+            return "half"
+        case .quarter:
+            return "quarter"
+        case .eighth:
+            return "eight"
+        case .sixteenth:
+            return "sixteenth"
+        }
     }
 }

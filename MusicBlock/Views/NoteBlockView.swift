@@ -7,11 +7,15 @@
 
 import SwiftUI
 
-struct BlockView: View {
-    @State var position: CGPoint
-    @State var selectedDuration: NoteDuration = .quarter
-    @State var selectedNote: Note = .c4
-//    @Binding var showNotePicker: Bool
+struct NoteBlockView: View {
+    @EnvironmentObject var workspace: BlockWorkspace
+    let blockID: UUID
+    
+    @State private var dragOffset: CGSize = .zero
+    
+    var noteBlock: NoteBlock {
+        workspace.blocks[blockID] as! NoteBlock
+    }
     
     var body: some View {
         BlocklyBlockShape()
@@ -23,23 +27,23 @@ struct BlockView: View {
                     Text("play")
                         .foregroundStyle(.white)
 //                        .border(.red)
-                    DropdownMenu(selectedNote: $selectedDuration, dropDownAlignment: .trailing, fromTop: false, options: [
-                        DropdownOption(note: .whole, action: { print("Details") }),
-                        DropdownOption(note: .half, action: { print("Details") }),
-                        DropdownOption(note: .quarter, action: { print("Details") }),
-                        DropdownOption(note: .eight, action: { print("Details") }),
-                        DropdownOption(note: .sixteenth, action: { print("Details") })
+                    DropdownMenu(blockID: blockID, dropDownAlignment: .trailing, fromTop: false, options: [
+                        DropdownOption(duration: .whole, action: { print("Details") }),
+                        DropdownOption(duration: .half, action: { print("Details") }),
+                        DropdownOption(duration: .quarter, action: { print("Details") }),
+                        DropdownOption(duration: .eighth, action: { print("Details") }),
+                        DropdownOption(duration: .sixteenth, action: { print("Details") })
                     ])
 //                    .border(.red)
 
                     Spacer()
-                    
+
                     Text("note")
                         .foregroundStyle(.white)
 //                        .border(.red)
 
-                    
-                    DropdownNoteMenu(selectedDuration: $selectedDuration, selectedNote: $selectedNote, dropDownAlignment: .trailing, fromTop: false)
+
+                    DropdownNoteMenu(blockID: blockID, dropDownAlignment: .trailing, fromTop: false)
 //                        .border(.red)
 
                 }
@@ -47,19 +51,23 @@ struct BlockView: View {
                 .frame(maxWidth: .infinity)
 //                .border(.orange)
             }
-            .position(position)
+            .position(noteBlock.position)
             .gesture(
                 DragGesture()
                     .onChanged { value in
-                        position = value.location
+                        workspace.disconnect(blockID)
+                        workspace.moveStack(
+                            from: blockID,
+                            to: value.location
+                        )
+                        workspace.selectedBlockID = blockID
+                    }
+                    .onEnded { _ in
+                        workspace.trySnap(blockID)
                     }
             )
     }
 }
-
-//#Preview {
-//    BlockView(position: CGPoint(x: 100, y: 100))
-//}
 
 struct BlocklyBlockShape: Shape {
     func path(in rect: CGRect) -> Path {
