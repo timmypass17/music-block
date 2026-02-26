@@ -17,7 +17,7 @@ protocol Block: Identifiable {
 
 struct NoteBlock: Block {
     let id = UUID()
-    var position: CGPoint
+    var position: CGPoint = .zero
     var previous: UUID? = nil
     var next: UUID? = nil
     

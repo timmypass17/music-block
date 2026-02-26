@@ -49,7 +49,8 @@ struct StaffView: View {
                             .scaledToFit()
                             .frame(width: 33, height: 71)
                             .position(
-                                x: CGFloat(index) * noteSpacing + 100,
+//                                x: CGFloat(index) * noteSpacing + 100,
+                                x: xNoteOffset(index),   // 100 is inital base offset
                                 y: yForPitch(note.pitch)
                             )
                     }
@@ -69,7 +70,7 @@ struct StaffView: View {
                             .scaledToFit()
                             .frame(width: 33, height: 71)
                             .position(
-                                x: CGFloat(index) * noteSpacing + 100,
+                                x: xNoteOffset(index),
                                 y: yForPitch(note.pitch)
                             )
                     }
@@ -97,6 +98,45 @@ struct StaffView: View {
         }
     }
     
+    func xNoteOffset(_ index: Int) -> CGFloat {
+        let sixteenthSpacing: CGFloat = 17
+        let eighthSpacing: CGFloat = sixteenthSpacing * 2
+        let quarterSpacing: CGFloat = sixteenthSpacing * 4
+        let halfSpacing: CGFloat = sixteenthSpacing * 8
+        let wholeSpacing: CGFloat = sixteenthSpacing * 16
+        
+        var totalXOffset: CGFloat = 0
+        var beats = 0.0
+
+        // Get previous notes and count offset
+        var j = 0
+        while j < index {
+            let note = song[j]
+            switch note.duration {
+            case .whole:
+                totalXOffset += wholeSpacing
+            case .half:
+                totalXOffset += halfSpacing
+            case .quarter:
+                totalXOffset += quarterSpacing
+            case .eighth:
+                totalXOffset += eighthSpacing
+            case .sixteenth:
+                totalXOffset += sixteenthSpacing
+            }
+            
+            // Add extra padding after each measure
+            if beats.truncatingRemainder(dividingBy: Double(beatsPerMeasure)) == 0 {
+                totalXOffset += 10
+            }
+            
+            beats += note.duration.rawValue
+            j += 1
+        }
+        
+        return totalXOffset + 110
+    }
+    
     func yForPitch(_ pitch: Pitch) -> CGFloat {
         let baseOffset: Double = -27.13    // where a4 is
         let spacing: Double = 7.9578 // vertical offset between each pitch
@@ -107,12 +147,13 @@ struct StaffView: View {
     func measurePositions() -> [CGFloat] {
         var beats = 0.0
         var measureX: [CGFloat] = []
-        
+                
         for index in song.indices {
             let note = song[index]
             
+            // Add bar every 4 beats (1 measure)
             if beats.truncatingRemainder(dividingBy: Double(beatsPerMeasure)) == 0 {
-                let x = CGFloat(index) * noteSpacing + 70
+                let x: CGFloat = CGFloat(measureX.count) * (4 * noteSpacing) + 70
                 measureX.append(x)
             }
             

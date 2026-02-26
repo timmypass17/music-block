@@ -35,8 +35,9 @@ struct DropdownFunctionMenu: View {
         }
     }
     
-    let options: [String]
-    
+    var onTapNewBlockOption: () -> Void
+    var onTapOption: (FunctionBlockData) -> Void
+
     var body: some View {
         ZStack {
             Button {
@@ -52,24 +53,26 @@ struct DropdownFunctionMenu: View {
             .overlay(alignment: fromTop ? .bottom : .top) {
                 if isExpanded {
                     VStack(alignment: .leading, spacing: 8) {
-                        ForEach(options, id: \.self) { option in
-                            HStack(spacing: 8) {
-                                Text(option)
-                            }
-                            .padding(.vertical, 5)
+                        Text("New Block")
                             .onTapGesture {
-                                if option == "New Block" {
-                                    
+                                onTapNewBlockOption()
+                                withAnimation {
+                                    isExpanded = false
                                 }
-//                                if var block = workspace.blocks[blockID] as? NoteBlock {
-//                                    block.note.duration = option.duration
-//                                    workspace.blocks[blockID] = block
-//                                    workspace.selectedBlockID = blockID
-//                                }
-//                                option.action()
-//                                withAnimation {
-//                                    isExpanded = false
-//                                }
+                            }
+                        
+                        ForEach(Array(workspace.functionBlockOptions.keys), id: \.self) { id in
+                            if let option = workspace.functionBlockOptions[id] {
+                                HStack(spacing: 8) {
+                                    Text(workspace.getFunctionName(functionID: id))
+                                }
+                                .padding(.vertical, 5)
+                                .onTapGesture {
+                                    onTapOption(option)
+                                    withAnimation {
+                                        isExpanded = false
+                                    }
+                                }
                             }
                         }
                     }

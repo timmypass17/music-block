@@ -18,7 +18,7 @@ struct PlayBlockView: View {
         PlayBlockShape()
             .foregroundStyle(.orange)
             .frame(width: 200, height: 60)
-            .border(.red)
+//            .border(.red)
             .overlay {
                 HStack {
                     Text("when")

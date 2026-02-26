@@ -23,70 +23,8 @@ struct BlocklyWorkspaceView: View {
                 VStack {
                     StaffView(userNotes: workspace.activeNotes, visibleNotes: workspace.visibleNotes)
                     Spacer()
-//                    VStack {
-//                        Slider(
-//                            value: $barHeight,
-//                            in: 0...100,
-//                            onEditingChanged: { editing in
-//                            }
-//                        )
-//                        Text("\(barHeight)")
-//                    }
-//                    VStack {
-//                        Slider(
-//                            value: $barOffset,
-//                            in: 0...100,
-//                            onEditingChanged: { editing in
-//                            }
-//                        )
-//                        Text("\(barOffset)")
-//                    }
-//                    VStack {
-//                        Slider(
-//                            value: $baseOffset,
-//                            in: -35...0,
-//                            onEditingChanged: { editing in
-//                            }
-//                        )
-//                        Text("\(baseOffset)")
-//                    }
-//                    VStack {
-//                        Slider(
-//                            value: $spacing,
-//                            in: 0...20,
-//                            onEditingChanged: { editing in
-//                            }
-//                        )
-//                        Text("\(spacing)")
-//                    }
                 }
-//                VStack {
-//                    VStack {
-//                        Image("stave")
-//                            .resizable()
-//                            .scaledToFit()
-//                            .frame(width: 700, height: 120)
-//                            .border(.blue)
-//                        Image("stave")
-//                            .resizable()
-//                            .scaledToFit()
-//                            .frame(width: 700, height: 120)
-//                            .border(.blue)
-//                    }
-//                    .overlay {
-//                        ForEach(Song.song1) { note in
-//                            NoteView(note: note)
-//                        }
-////                        ForEach(Array(workspace.blocks.keys), id: \.self) { id in
-////                            if workspace.blocks[id] is NoteBlock {
-////                                NoteView(blockID: id)
-////                                    .environmentObject(workspace)
-////                            }
-////                        }
-//                    }
-//                    Spacer()
-//                }
-                                
+                
                 ForEach(Array(workspace.blocks.keys), id: \.self) { id in
                     Group {
                         switch workspace.blocks[id] {
@@ -94,6 +32,10 @@ struct BlocklyWorkspaceView: View {
                             PlayBlockView(blockID: id)
                         case is NoteBlock:
                             NoteBlockView(blockID: id)
+                        case is FunctionBlock:
+                            FunctionBlockView(blockID: id)
+                        case is FunctionInstanceBlock:
+                            FunctionInstanceBlockView(blockID: id)
                         default:
                             EmptyView()
                         }
@@ -123,8 +65,34 @@ struct BlocklyWorkspaceView: View {
                                 Text("Note Block")
                             }
                         }
-                        DropdownFunctionMenu(fromTop: true, options: ["New Block"])
-                            .environmentObject(workspace)
+                        DropdownFunctionMenu(fromTop: true, onTapNewBlockOption: {
+                            // Add function block
+                            let center = CGPoint(
+                                x: geo.size.width / 2,
+                                y: geo.size.height / 2
+                            )
+                            
+                            let functionBlock = FunctionBlock(
+                                position: center
+                            )
+                            
+                            workspace.addBlock(functionBlock)
+                        }) { option in
+                            // Add function block instance
+                            let center = CGPoint(
+                                x: geo.size.width / 2,
+                                y: geo.size.height / 2
+                            )
+                            
+                            let functionInstanceBlock = FunctionInstanceBlock(
+                                position: center,
+                                name: workspace.getFunctionName(functionID: option.functionBlockID),
+                                functionBlockID: option.functionBlockID
+                            )
+                            
+                            workspace.addBlock(functionInstanceBlock)
+                        }
+                        .environmentObject(workspace)
 //                        Button {
 //                            
 //                        } label: {

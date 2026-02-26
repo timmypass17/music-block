@@ -9,6 +9,11 @@ import Foundation
 import Combine
 import SwiftUI
 
+struct FunctionBlockData {
+    var functionBlockID: UUID
+}
+
+@MainActor
 class BlockWorkspace: ObservableObject {
     @Published var blocks: [UUID: any Block] = [:]
     @Published var selectedBlockID: UUID? = nil
@@ -20,28 +25,84 @@ class BlockWorkspace: ObservableObject {
     }
     @Published var visibleNotes: [Bool] = []
     
+    @Published var functionBlockOptions: [UUID: FunctionBlockData] = [:]
+    
     let blockHeight: CGFloat = 60
     let snapDistance: CGFloat = 40
     let blockSpacing: CGFloat = 4
     let audioManager = AudioManager()
     
     func getNotes() -> [Note] {
+        // Find play block
+        guard let playBlock = blocks.first(where: { $0.value is PlayBlock })?.value as? PlayBlock else {
+            print("Fail to find play block")
+            return []
+        }
+        
+        // Start notes
+        return getNotes(playBlock.next)
+    }
+    
+    func getNotes(_ head: UUID?) -> [Note] {
         var notes: [Note] = []
-        guard let playBlock = blocks.first(where: { $0.value is PlayBlock })?.value as? PlayBlock
-        else { return notes }
         
         // Iterate through linked list
-        var current: UUID? = playBlock.next
+        var current: UUID? = head
 
         while let cid = current {
             // play block code
             if let noteBlock = blocks[cid] as? NoteBlock {
                 notes.append(noteBlock.note)
+            } else if let functionInstBlock = blocks[cid] as? FunctionInstanceBlock,
+                      let functionBlockID = functionInstBlock.functionBlockID,
+                      let functionBlock = blocks.first(where: { $0.key == functionBlockID })
+            {
+                // Get notes starting at function
+                notes.append(contentsOf: getNotes(functionBlock.value.next))
             }
             current = blocks[cid]?.next
         }
         return notes
     }
+    
+//    func getNotes() -> [Note] {
+//        var notes: [Note] = []
+//        guard let playBlock = blocks.first(where: { $0.value is PlayBlock })?.value as? PlayBlock else { return notes }
+//        
+//        // Iterate through linked list
+//        var current: UUID? = playBlock.next
+//
+//        while let cid = current {
+//            // play block code
+//            if let noteBlock = blocks[cid] as? NoteBlock {
+//                notes.append(noteBlock.note)
+//            } else if let functionInstBlock = blocks[cid] as? FunctionInstanceBlock,
+//                let functionBlockID = functionInstBlock.functionBlockID {
+//                notes.append(contentsOf: getFunctionNotes(functionBlockID: functionBlockID))
+//            }
+//            current = blocks[cid]?.next
+//        }
+//        return notes
+//    }
+    
+//    func getFunctionNotes(functionBlockID: UUID) -> [Note] {
+//        var notes: [Note] = []
+//        
+//        guard let functionBlock = blocks.first(where: { $0.value is FunctionBlock })?.value as? FunctionBlock else { return [] }
+//        var current: UUID? = functionBlock.next
+//
+//        while let cid = current {
+//            if let noteBlock = blocks[cid] as? NoteBlock {
+//                notes.append(noteBlock.note)
+//            } else if let functionInstBlock = blocks[cid] as? FunctionInstanceBlock,
+//                let functionBlockID = functionInstBlock.functionBlockID {
+//                notes.append(contentsOf: getFunctionNotes(functionBlockID: functionBlockID))
+//            }
+//            current = blocks[cid]?.next
+//        }
+//        
+//        return notes
+//    }
     
     func play() async {
         let notes: [Note] = getNotes()
@@ -62,9 +123,26 @@ class BlockWorkspace: ObservableObject {
         blocks[block.id] = block
     }
     
+    func getFunctionName(functionID: UUID) -> String {
+        guard let functionBlock = blocks.first(where: { $0.key == functionID })?.value as? FunctionBlock else { return "" }
+        return functionBlock.name
+    }
+    
+    func addFunction(functionId: UUID) {
+//        functionBlockOptions[functionId] = FunctionBlockData(name: <#T##String#>, functionBlockID: <#T##UUID?#>)
+    }
+    
     func connect(parent: UUID, child: UUID) {
+        let temp = blocks[parent]?.next
         blocks[parent]?.next = child
         blocks[child]?.previous = parent
+        
+        if temp != nil {
+            blocks[child]?.next = temp
+            blocks[temp!]?.previous = child
+        }
+        
+        
     }
     
     func disconnect(_ id: UUID) {
@@ -90,6 +168,7 @@ class BlockWorkspace: ObservableObject {
     
     func trySnap(_ id: UUID) {
         guard let dragged = blocks[id] else { return }
+        guard dragged is NoteBlock || dragged is FunctionInstanceBlock else { return }
         
         for (otherID, other) in blocks {
             if otherID == id { continue }

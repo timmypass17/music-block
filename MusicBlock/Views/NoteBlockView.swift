@@ -21,7 +21,7 @@ struct NoteBlockView: View {
         BlocklyBlockShape()
             .foregroundStyle(.blue)
             .frame(width: 200, height: 60)
-            .border(.red)
+//            .border(.red)
             .overlay {
                 HStack {
                     Text("play")
