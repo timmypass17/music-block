@@ -25,6 +25,8 @@ class BlockWorkspace: ObservableObject {
     }
     @Published var visibleNotes: [Bool] = []
     
+    @Published var scrollPosition = ScrollPosition(idType: Note.ID.self)
+
     @Published var functionBlockOptions: [UUID: FunctionBlockData] = [:]
     
     let blockHeight: CGFloat = 60
@@ -106,11 +108,14 @@ class BlockWorkspace: ObservableObject {
     
     func play() async {
         let notes: [Note] = getNotes()
+        let staffLength = 700
         activeNotes = notes
 
         for (index, note) in notes.enumerated() {
-            withAnimation {
+            // Ensure animation always plays
+            withAnimation(.smooth(duration: note.duration.rawValue)) {
                 visibleNotes[index] = true
+                scrollPosition.scrollTo(x: xNoteOffset(notes, index) - CGFloat((staffLength / 2)))
             }
             await audioManager.play(pitch: note.pitch, duration: note.duration)
         }

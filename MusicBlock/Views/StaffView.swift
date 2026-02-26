@@ -10,7 +10,7 @@ import SwiftUI
 struct StaffView: View {
 //    @Binding var baseOffset: Double // -18
 //    @Binding var spacing: Double    // 10
-    
+    @EnvironmentObject var workspace: BlockWorkspace
     var barHeight: Double = 62
     var barYOffset: Double = 61
     let song: [Note] = Song.song1
@@ -20,7 +20,7 @@ struct StaffView: View {
     let noteSpacing: CGFloat = 70
     let lineSpacing: CGFloat = 20
     
-    let beatsPerMeasure = 4
+//    let beatsPerMeasure = 4
     
     var body: some View {
         ZStack {
@@ -29,7 +29,7 @@ struct StaffView: View {
                 .resizable()
                 .frame(width: 700, height: 120)
             
-            ScrollView(.horizontal, showsIndicators: false) {
+            ScrollView(.horizontal, showsIndicators: true) {
                 ZStack(alignment: .topLeading) {
 
                     // Measure lines
@@ -50,7 +50,7 @@ struct StaffView: View {
                             .frame(width: 33, height: 71)
                             .position(
 //                                x: CGFloat(index) * noteSpacing + 100,
-                                x: xNoteOffset(index),   // 100 is inital base offset
+                                x: xNoteOffset(song, index),   // 100 is inital base offset
                                 y: yForPitch(note.pitch)
                             )
                     }
@@ -70,15 +70,22 @@ struct StaffView: View {
                             .scaledToFit()
                             .frame(width: 33, height: 71)
                             .position(
-                                x: xNoteOffset(index),
+                                x: xNoteOffset(song, index),
                                 y: yForPitch(note.pitch)
                             )
+                            .id(note.id)
                     }
                 }
                 .frame(width: timelineWidth(), height: 120)
+                .scrollTargetLayout()
                 .border(.orange)
             }
             .frame(width: 700, height: 120)
+            .scrollPosition($workspace.scrollPosition)
+            .onChange(of: workspace.scrollPosition) { oldValue, newValue in
+                // Observe changes in the scroll position
+                print("Scrolled to item ID: \(newValue)")
+            }
         }
         .frame(width: 700, height: 120)
         .border(.blue)
@@ -98,44 +105,44 @@ struct StaffView: View {
         }
     }
     
-    func xNoteOffset(_ index: Int) -> CGFloat {
-        let sixteenthSpacing: CGFloat = 17
-        let eighthSpacing: CGFloat = sixteenthSpacing * 2
-        let quarterSpacing: CGFloat = sixteenthSpacing * 4
-        let halfSpacing: CGFloat = sixteenthSpacing * 8
-        let wholeSpacing: CGFloat = sixteenthSpacing * 16
-        
-        var totalXOffset: CGFloat = 0
-        var beats = 0.0
-
-        // Get previous notes and count offset
-        var j = 0
-        while j < index {
-            let note = song[j]
-            switch note.duration {
-            case .whole:
-                totalXOffset += wholeSpacing
-            case .half:
-                totalXOffset += halfSpacing
-            case .quarter:
-                totalXOffset += quarterSpacing
-            case .eighth:
-                totalXOffset += eighthSpacing
-            case .sixteenth:
-                totalXOffset += sixteenthSpacing
-            }
-            
-            // Add extra padding after each measure
-            if beats.truncatingRemainder(dividingBy: Double(beatsPerMeasure)) == 0 {
-                totalXOffset += 10
-            }
-            
-            beats += note.duration.rawValue
-            j += 1
-        }
-        
-        return totalXOffset + 110
-    }
+//    func xNoteOffset(_ index: Int) -> CGFloat {
+//        let sixteenthSpacing: CGFloat = 17
+//        let eighthSpacing: CGFloat = sixteenthSpacing * 2
+//        let quarterSpacing: CGFloat = sixteenthSpacing * 4
+//        let halfSpacing: CGFloat = sixteenthSpacing * 8
+//        let wholeSpacing: CGFloat = sixteenthSpacing * 16
+//        
+//        var totalXOffset: CGFloat = 0
+//        var beats = 0.0
+//
+//        // Get previous notes and count offset
+//        var j = 0
+//        while j < index {
+//            let note = song[j]
+//            switch note.duration {
+//            case .whole:
+//                totalXOffset += wholeSpacing
+//            case .half:
+//                totalXOffset += halfSpacing
+//            case .quarter:
+//                totalXOffset += quarterSpacing
+//            case .eighth:
+//                totalXOffset += eighthSpacing
+//            case .sixteenth:
+//                totalXOffset += sixteenthSpacing
+//            }
+//            
+//            // Add extra padding after each measure
+//            if beats.truncatingRemainder(dividingBy: Double(beatsPerMeasure)) == 0 {
+//                totalXOffset += 10
+//            }
+//            
+//            beats += note.duration.rawValue
+//            j += 1
+//        }
+//        
+//        return totalXOffset + 110
+//    }
     
     func yForPitch(_ pitch: Pitch) -> CGFloat {
         let baseOffset: Double = -27.13    // where a4 is
@@ -145,6 +152,7 @@ struct StaffView: View {
     }
     
     func measurePositions() -> [CGFloat] {
+        let beatsPerMeasure = 4
         var beats = 0.0
         var measureX: [CGFloat] = []
                 
@@ -167,3 +175,43 @@ struct StaffView: View {
 //#Preview {
 //    StaffView()
 //}
+
+func xNoteOffset(_ song: [Note], _ index: Int) -> CGFloat {
+    let beatsPerMeasure = 4
+    let sixteenthSpacing: CGFloat = 17
+    let eighthSpacing: CGFloat = sixteenthSpacing * 2
+    let quarterSpacing: CGFloat = sixteenthSpacing * 4
+    let halfSpacing: CGFloat = sixteenthSpacing * 8
+    let wholeSpacing: CGFloat = sixteenthSpacing * 16
+    
+    var totalXOffset: CGFloat = 0
+    var beats = 0.0
+
+    // Get previous notes and count offset
+    var j = 0
+    while j < index {
+        let note = song[j]
+        switch note.duration {
+        case .whole:
+            totalXOffset += wholeSpacing
+        case .half:
+            totalXOffset += halfSpacing
+        case .quarter:
+            totalXOffset += quarterSpacing
+        case .eighth:
+            totalXOffset += eighthSpacing
+        case .sixteenth:
+            totalXOffset += sixteenthSpacing
+        }
+        
+        // Add extra padding after each measure
+        if beats.truncatingRemainder(dividingBy: Double(beatsPerMeasure)) == 0 {
+            totalXOffset += 10
+        }
+        
+        beats += note.duration.rawValue
+        j += 1
+    }
+    
+    return totalXOffset + 110
+}

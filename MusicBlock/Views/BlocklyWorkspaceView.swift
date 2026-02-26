@@ -22,6 +22,7 @@ struct BlocklyWorkspaceView: View {
                 
                 VStack {
                     StaffView(userNotes: workspace.activeNotes, visibleNotes: workspace.visibleNotes)
+                        .environmentObject(workspace)
                     Spacer()
                 }
                 
