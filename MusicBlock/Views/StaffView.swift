@@ -21,13 +21,14 @@ struct StaffView: View {
     var barHeight: Double = 62
     
     var barYOffset: Double = 60.80
-    let song: [Note] = Song.song2
+    let notes: [Note]
     let userNotes: [Note]
     let visibleNotes: [Bool]
     
     let noteSpacing: CGFloat = 70
     let lineSpacing: CGFloat = 20
-    
+    @Binding var scrollPosition: ScrollPosition
+
 //    let beatsPerMeasure = 4
     
     var body: some View {
@@ -49,8 +50,8 @@ struct StaffView: View {
                     }
 
                     // Song notes
-                    ForEach(song.indices, id: \.self) { index in
-                        let note = song[index]
+                    ForEach(notes.indices, id: \.self) { index in
+                        let note = notes[index]
 
                         Image(note.duration.iconName)
                             .resizable()
@@ -75,7 +76,7 @@ struct StaffView: View {
                                 .position(x: slashXOffset, y: slashYOffset)
                             }
                             .position(
-                                x: xNoteOffset(song, index),
+                                x: xNoteOffset(notes, index),
                                 y: yForPitch(note.pitch)
                             )
                     }
@@ -95,7 +96,7 @@ struct StaffView: View {
                             .scaledToFit()
                             .frame(width: 33, height: 71)
                             .position(
-                                x: xNoteOffset(song, index),
+                                x: xNoteOffset(userNotes, index),
                                 y: yForPitch(note.pitch)
                             )
                             .id(note.id)
@@ -114,64 +115,25 @@ struct StaffView: View {
                     .padding(.leading, 45)  // decrease leading clip for clef
             )
 //            .border(.green)
-            .scrollPosition($workspace.scrollPosition)
+            .scrollPosition($scrollPosition)
         }
         .frame(width: 700, height: 120)
 //        .border(.black)
     }
     
     func timelineWidth() -> CGFloat {
-        CGFloat(song.count) * noteSpacing + 200
+        CGFloat(notes.count) * noteSpacing + 200
     }
     
     func getUserNoteColor(_ index: Int) -> Color {
-        guard index < song.count else { return .red }
+        guard index < notes.count else { return .red }
         
-        if song[index] == userNotes[index] {
+        if notes[index] == userNotes[index] {
             return .black
         } else {
             return .red
         }
     }
-    
-//    func xNoteOffset(_ index: Int) -> CGFloat {
-//        let sixteenthSpacing: CGFloat = 17
-//        let eighthSpacing: CGFloat = sixteenthSpacing * 2
-//        let quarterSpacing: CGFloat = sixteenthSpacing * 4
-//        let halfSpacing: CGFloat = sixteenthSpacing * 8
-//        let wholeSpacing: CGFloat = sixteenthSpacing * 16
-//        
-//        var totalXOffset: CGFloat = 0
-//        var beats = 0.0
-//
-//        // Get previous notes and count offset
-//        var j = 0
-//        while j < index {
-//            let note = song[j]
-//            switch note.duration {
-//            case .whole:
-//                totalXOffset += wholeSpacing
-//            case .half:
-//                totalXOffset += halfSpacing
-//            case .quarter:
-//                totalXOffset += quarterSpacing
-//            case .eighth:
-//                totalXOffset += eighthSpacing
-//            case .sixteenth:
-//                totalXOffset += sixteenthSpacing
-//            }
-//            
-//            // Add extra padding after each measure
-//            if beats.truncatingRemainder(dividingBy: Double(beatsPerMeasure)) == 0 {
-//                totalXOffset += 10
-//            }
-//            
-//            beats += note.duration.rawValue
-//            j += 1
-//        }
-//        
-//        return totalXOffset + 110
-//    }
     
     func yForPitch(_ pitch: Pitch) -> CGFloat {
         let baseOffset: Double = -26.808
@@ -185,8 +147,8 @@ struct StaffView: View {
         var beats = 0.0
         var measureX: [CGFloat] = []
                 
-        for index in song.indices {
-            let note = song[index]
+        for index in notes.indices {
+            let note = notes[index]
             
             // Add bar every 4 beats (1 measure)
             if beats.truncatingRemainder(dividingBy: Double(beatsPerMeasure)) == 0 {

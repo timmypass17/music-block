@@ -20,3 +20,51 @@ extension Note: Equatable {
             lhs.pitch == rhs.pitch
     }
 }
+
+extension Note {
+    static let levelZero: [Note] = [
+        Note(duration: .quarter, pitch: .c4),
+        Note(duration: .quarter, pitch: .c4)
+    ]
+    static let otherLevelZero: [Note] = [
+        Note(duration: .quarter, pitch: .d4),
+        Note(duration: .quarter, pitch: .e4),
+        Note(duration: .quarter, pitch: .f4)
+
+    ]
+    static let levelOne: [Note] = [
+        Note(duration: .eighth, pitch: .f4),
+        Note(duration: .eighth, pitch: .e4),
+        Note(duration: .quarter, pitch: .a4),
+        Note(duration: .quarter, pitch: .a4),
+        Note(duration: .quarter, pitch: .b4),
+    ]
+    
+    static let longLevel: [Note] = [
+        Note(duration: .quarter, pitch: .c4),
+        Note(duration: .quarter, pitch: .c4),
+        Note(duration: .quarter, pitch: .c4),
+        Note(duration: .quarter, pitch: .c4),
+        Note(duration: .quarter, pitch: .c4),
+        Note(duration: .quarter, pitch: .c4),
+        Note(duration: .quarter, pitch: .c4),
+        Note(duration: .quarter, pitch: .c4),
+        Note(duration: .quarter, pitch: .c4),
+        Note(duration: .quarter, pitch: .c4),
+        Note(duration: .quarter, pitch: .c4),
+        Note(duration: .quarter, pitch: .c4),
+        Note(duration: .quarter, pitch: .c4),
+        Note(duration: .quarter, pitch: .c4),
+        Note(duration: .quarter, pitch: .c4),
+        Note(duration: .quarter, pitch: .c4),
+    ]
+    
+    static let otherLongLevel: [Note] = [
+        Note(duration: .quarter, pitch: .c4),
+        Note(duration: .quarter, pitch: .c4),
+        Note(duration: .quarter, pitch: .c4),
+        Note(duration: .quarter, pitch: .c4),
+        Note(duration: .quarter, pitch: .c4),
+        Note(duration: .quarter, pitch: .c4),
+    ]
+}

@@ -19,13 +19,23 @@ class BlockWorkspace: ObservableObject {
     @Published var selectedBlockID: UUID? = nil
     @Published var activeNotes: [Note] = [] {
         didSet {
+            print("Did set active notes")
             visibleNotes = Array(repeating: false, count: activeNotes.count)
-            print(visibleNotes)
         }
     }
     @Published var visibleNotes: [Bool] = []
     
+    @Published var otherActiveNotes: [Note] = [] {
+        didSet {
+            print("Did set other active notes")
+            otherVisibleNotes = Array(repeating: false, count: otherActiveNotes.count)
+        }
+    }
+    @Published var otherVisibleNotes: [Bool] = []
+    
+    
     @Published var scrollPosition = ScrollPosition(idType: Note.ID.self)
+    @Published var otherScrollPosition = ScrollPosition(idType: Note.ID.self)
 
     @Published var functionBlockOptions: [UUID: FunctionBlockData] = [:]
     
@@ -33,19 +43,36 @@ class BlockWorkspace: ObservableObject {
     let snapDistance: CGFloat = 40
     let blockSpacing: CGFloat = 4
     let audioManager = AudioManager()
+    let otherAudioManager = AudioManager()
+
+    var levels: [Level] = Level.all
+    @Published var currentLevelIndex = 0
+    var currentLevel: Level {
+        return levels[currentLevelIndex]
+    }
+    @Published var isShowingHintSheet = false
+    @Published var isShowingCompleteSheet = false
     
-    func getNotes() -> [Note] {
+    var rightPlayBlockID: UUID = UUID()
+    var leftPlayBlockID: UUID?
+    
+    var enablePlayBlockButton: Bool {
+        let playBlockCount = blocks.count(where: { $0.value is PlayBlock })
+        return playBlockCount < 2
+    }
+
+    func getUserNotes(playBlockID: UUID) -> [Note] {
         // Find play block
-        guard let playBlock = blocks.first(where: { $0.value is PlayBlock })?.value as? PlayBlock else {
+        guard let playBlock = blocks.first(where: { $0.key == playBlockID })?.value as? PlayBlock else {
             print("Fail to find play block")
             return []
         }
         
         // Start notes
-        return getNotes(playBlock.next)
+        return getUserNotes(playBlock.next)
     }
     
-    func getNotes(_ head: UUID?) -> [Note] {
+    func getUserNotes(_ head: UUID?) -> [Note] {
         var notes: [Note] = []
         
         // Iterate through linked list
@@ -60,68 +87,88 @@ class BlockWorkspace: ObservableObject {
                       let functionBlock = blocks.first(where: { $0.key == functionBlockID })
             {
                 // Get notes starting at function
-                notes.append(contentsOf: getNotes(functionBlock.value.next))
+                notes.append(contentsOf: getUserNotes(functionBlock.value.next))
             }
             current = blocks[cid]?.next
         }
         return notes
     }
     
-//    func getNotes() -> [Note] {
-//        var notes: [Note] = []
-//        guard let playBlock = blocks.first(where: { $0.value is PlayBlock })?.value as? PlayBlock else { return notes }
-//        
-//        // Iterate through linked list
-//        var current: UUID? = playBlock.next
-//
-//        while let cid = current {
-//            // play block code
-//            if let noteBlock = blocks[cid] as? NoteBlock {
-//                notes.append(noteBlock.note)
-//            } else if let functionInstBlock = blocks[cid] as? FunctionInstanceBlock,
-//                let functionBlockID = functionInstBlock.functionBlockID {
-//                notes.append(contentsOf: getFunctionNotes(functionBlockID: functionBlockID))
-//            }
-//            current = blocks[cid]?.next
-//        }
-//        return notes
-//    }
-    
-//    func getFunctionNotes(functionBlockID: UUID) -> [Note] {
-//        var notes: [Note] = []
-//        
-//        guard let functionBlock = blocks.first(where: { $0.value is FunctionBlock })?.value as? FunctionBlock else { return [] }
-//        var current: UUID? = functionBlock.next
-//
-//        while let cid = current {
-//            if let noteBlock = blocks[cid] as? NoteBlock {
-//                notes.append(noteBlock.note)
-//            } else if let functionInstBlock = blocks[cid] as? FunctionInstanceBlock,
-//                let functionBlockID = functionInstBlock.functionBlockID {
-//                notes.append(contentsOf: getFunctionNotes(functionBlockID: functionBlockID))
-//            }
-//            current = blocks[cid]?.next
-//        }
-//        
-//        return notes
-//    }
-    
     func play() async {
-        let notes: [Note] = getNotes()
-        let staffLength = 700
+        let expectedNotes: [Note] = currentLevel.notes
+        let otherExpectedNotes: [Note] = currentLevel.otherNotes
+
+        let notes: [Note] = getUserNotes(playBlockID: rightPlayBlockID)
         activeNotes = notes
+        
+        let otherNotes: [Note]
+        if let leftPlayBlockID {
+            otherNotes = getUserNotes(playBlockID: leftPlayBlockID)
+        } else {
+            otherNotes = []
+        }
+        otherActiveNotes = otherNotes
+        
+        var res: Bool = true
+        
+        if notes.count != expectedNotes.count {
+            print("Right hand notes have different counts \(notes.count) != \(expectedNotes.count)")
+            res = false
+        }
+        
+        if otherNotes.count != otherExpectedNotes.count {
+            print("Left hand notes have different counts \(otherNotes.count) != \(otherExpectedNotes.count)")
+            res = false
+        }
+        
+        async let passed1 = playNotes(notes, expectedNotes, true)
+        async let passed2 = playNotes(otherNotes, otherExpectedNotes, false)
+        let (result1, result2) = await (passed1, passed2)
+        print("Results1: \(result1)")
+        print("Results2: \(result2)")
+
+        if res {
+            res = result1 && result2
+        }
+        
+        print("Final Result: \(res)")
+        
+        if res && !currentLevel.completed {
+            levels[currentLevelIndex].completed = true
+            isShowingCompleteSheet = true
+        }
+    }
+    
+    func playNotes(_ notes: [Note], _ expectedNotes: [Note], _ isRightHand: Bool) async -> Bool {
+        let staffLength = 700
+        var passed: Bool = true
 
         for (index, note) in notes.enumerated() {
             // Ensure animation always plays
             withAnimation(.smooth(duration: note.duration.rawValue)) {
-                visibleNotes[index] = true
-                scrollPosition.scrollTo(x: xNoteOffset(notes, index) - CGFloat((staffLength / 2)))
+                if isRightHand {
+                    visibleNotes[index] = true
+                    scrollPosition.scrollTo(x: xNoteOffset(notes, index) - CGFloat((staffLength / 2)))
+                } else {
+                    otherVisibleNotes[index] = true
+                    otherScrollPosition.scrollTo(x: xNoteOffset(notes, index) - CGFloat((staffLength / 2)))
+                }
             }
-            await audioManager.play(pitch: note.pitch, duration: note.duration)
+            
+            if isRightHand {
+                await audioManager.play(pitch: note.pitch, duration: note.duration)
+            } else {
+                await otherAudioManager.play(pitch: note.pitch, duration: note.duration)
+            }
+            
+            if index < expectedNotes.count {
+                if note != expectedNotes[index] {
+                    passed = false
+                }
+            }
         }
         
-        
-        activeNotes.removeAll()
+        return passed
     }
     
     func addBlock(_ block: any Block) {
@@ -133,10 +180,6 @@ class BlockWorkspace: ObservableObject {
         return functionBlock.name
     }
     
-    func addFunction(functionId: UUID) {
-//        functionBlockOptions[functionId] = FunctionBlockData(name: <#T##String#>, functionBlockID: <#T##UUID?#>)
-    }
-    
     func connect(parent: UUID, child: UUID) {
         let temp = blocks[parent]?.next
         blocks[parent]?.next = child
@@ -146,8 +189,6 @@ class BlockWorkspace: ObservableObject {
             blocks[child]?.next = temp
             blocks[temp!]?.previous = child
         }
-        
-        
     }
     
     func disconnect(_ id: UUID) {

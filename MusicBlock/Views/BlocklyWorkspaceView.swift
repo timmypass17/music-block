@@ -9,6 +9,7 @@ import SwiftUI
 
 struct BlocklyWorkspaceView: View {
     @StateObject var workspace = BlockWorkspace()
+
     @State var baseOffset: Double = -26.808
     @State var spacing: Double = 7.9578
     @State var barYOffset: Double = 60.80
@@ -21,30 +22,59 @@ struct BlocklyWorkspaceView: View {
     var body: some View {
         GeometryReader { geo in
             ZStack {
-                Color.gray.opacity(0.1).ignoresSafeArea()
+                Color.white
+//                Color.gray.opacity(0.1).ignoresSafeArea()
                 
-                VStack {
+                VStack(spacing: 64) {
                     HStack(spacing: 16) {
-                        ForEach(1..<6) { i in
+                        Button {
+                            workspace.isShowingHintSheet.toggle()
+                        } label: {
+                            Image(systemName: "questionmark")
+                                .foregroundStyle(.black)
+                                .frame(width: 30, height: 30)
+                                .padding(4)
+                                .background(.white, in: RoundedRectangle(cornerRadius: 16))
+                                .shadow(color: .black.opacity(0.1), radius: 2, x: 2, y: 2)
+                        }
+                        
+                        Spacer()
+                        
+                        ForEach(0..<5) { i in
                             Button {
-                                
+                                workspace.currentLevelIndex = i
+                                print("Level: \(workspace.currentLevelIndex)")
                             } label: {
-                                Text("\(i)")
+                                Text("\(i + 1)")
+                                    .foregroundStyle(.black)
                                     .frame(width: 30, height: 30)
                                     .padding(4)
                                     .background(.white, in: RoundedRectangle(cornerRadius: 16))
                                     .shadow(color: .black.opacity(0.1), radius: 2, x: 2, y: 2)
                             }
-                            .buttonStyle(.plain)
+//                            .buttonStyle(.plain)
+                            .disabled(!workspace.levels[i].available)
+                            .opacity(workspace.levels[i].available ? 1 : 0.4)
+                        }
+                        
+                        Spacer()
+                        
+                        Button {
+                            Task {
+                                await workspace.play()
+                            }
+                        } label: {
+                            Image(systemName: "play.fill")
+                                .foregroundStyle(.green)
+                                .frame(width: 30, height: 30)
+                                .padding(4)
+                                .background(.white, in: RoundedRectangle(cornerRadius: 16))
+                                .shadow(color: .black.opacity(0.1), radius: 2, x: 2, y: 2)
                         }
                     }
 //                    .border(.orange)
-                    .padding(.top, 35)
-                    Spacer()
-                }
-                .ignoresSafeArea()
-                
-                VStack(spacing: 24) {
+                    .padding()
+                    
                     StaffView(
 //                        baseOffset: $baseOffset,
 //                         spacing: $spacing,
@@ -53,35 +83,26 @@ struct BlocklyWorkspaceView: View {
 //                        slashXOffset: $slashXOffset,
 //                        slashYOffset: $slashYOffset,
 //                        slashSpacing: $slashSpacing,
-                        userNotes: workspace.activeNotes, visibleNotes: workspace.visibleNotes)
+                        notes: workspace.currentLevel.notes,
+                        userNotes: workspace.activeNotes,
+                        visibleNotes: workspace.visibleNotes,
+                        scrollPosition: $workspace.scrollPosition
+                    )
                         .environmentObject(workspace)
 //                        .border(.blue)
-                    StaffView(
-                        userNotes: workspace.activeNotes, visibleNotes: workspace.visibleNotes)
+                    
+                    if workspace.currentLevel.showLeft {
+                        StaffView(
+                            notes: workspace.currentLevel.otherNotes,
+                            userNotes: workspace.otherActiveNotes,
+                            visibleNotes: workspace.otherVisibleNotes,
+                            scrollPosition: $workspace.otherScrollPosition
+                        )
                         .environmentObject(workspace)
+                    }
                     
-                    
-//                    Slider(value: $baseOffset, in: -200...200)
-//                    Text("\(baseOffset)")
-//                    Slider(value: $spacing, in: 0...50)
-//                    Text("\(spacing)")
-//                    Slider(value: $barYOffset, in: 0...200)
-//                    Text("\(barYOffset)")
-                    
-//                    Slider(value: $slashWidth, in: 0...50)
-//                    Text("\(slashWidth)")
-//                    Slider(value: $slashXOffset, in: -100...100)
-//                    Text("\(slashXOffset)")
-//                    Slider(value: $slashYOffset, in: -10...100)
-//                    Text("\(slashYOffset)")
-//                    Slider(value: $slashSpacing, in: -10...100)
-//                    Text("\(slashSpacing)")
-
-//                    StaffView(userNotes: workspace.activeNotes, visibleNotes: workspace.visibleNotes)
-//                        .environmentObject(workspace)
                     Spacer()
                 }
-                .padding(.top, 100)
                 
                 ForEach(Array(workspace.blocks.keys), id: \.self) { id in
                     Group {
@@ -123,77 +144,97 @@ struct BlocklyWorkspaceView: View {
                                 Text("Note Block")
                             }
                         }
-                        DropdownFunctionMenu(fromTop: true, onTapNewBlockOption: {
-                            // Add function block
-                            let center = CGPoint(
-                                x: geo.size.width / 2,
-                                y: geo.size.height / 2
-                            )
-                            
-                            let functionBlock = FunctionBlock(
-                                position: center
-                            )
-                            
-                            workspace.addBlock(functionBlock)
-                        }) { option in
-                            // Add function block instance
-                            let center = CGPoint(
-                                x: geo.size.width / 2,
-                                y: geo.size.height / 2
-                            )
-                            
-                            let functionInstanceBlock = FunctionInstanceBlock(
-                                position: center,
-                                name: workspace.getFunctionName(functionID: option.functionBlockID),
-                                functionBlockID: option.functionBlockID
-                            )
-                            
-                            workspace.addBlock(functionInstanceBlock)
+                        
+                        if workspace.currentLevel.enableFunctionBlock {
+                            DropdownFunctionMenu(fromTop: true, onTapNewBlockOption: {
+                                // Add function block
+                                let center = CGPoint(
+                                    x: geo.size.width / 2,
+                                    y: geo.size.height / 2
+                                )
+                                
+                                let functionBlock = FunctionBlock(
+                                    position: center
+                                )
+                                
+                                workspace.addBlock(functionBlock)
+                            }) { option in
+                                // Add function block instance
+                                let center = CGPoint(
+                                    x: geo.size.width / 2,
+                                    y: geo.size.height / 2
+                                )
+                                
+                                let functionInstanceBlock = FunctionInstanceBlock(
+                                    position: center,
+                                    name: workspace.getFunctionName(functionID: option.functionBlockID),
+                                    functionBlockID: option.functionBlockID
+                                )
+                                
+                                workspace.addBlock(functionInstanceBlock)
+                            }
+                            .environmentObject(workspace)
                         }
-                        .environmentObject(workspace)
-//                        Button {
-//                            
-//                        } label: {
-//                            HStack {
-//                                Image(systemName: "cube.fill")
-//                                Text("Function Block")
-//                            }
-//                        }
+                        
+                        if workspace.currentLevel.showLeft {
+                            Button {
+                                let center = CGPoint(
+                                    x: geo.size.width / 2,
+                                    y: geo.size.height / 2
+                                )
+                                
+                                let playBlock = PlayBlock(
+                                    position: center
+                                )
+                                workspace.leftPlayBlockID = playBlock.id
+                                workspace.addBlock(playBlock)
+                            } label: {
+                                HStack {
+                                    Image(systemName: "play.fill")
+                                    Text("Play Block")
+                                }
+                            }
+                            .disabled(!workspace.enablePlayBlockButton)
+                        }
                     }
                     .padding()
-                    .background{
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(.white)
-                            .shadow(radius: 4, x: 0, y: 4)
-                    }
+                    .foregroundStyle(.black)
+                    .background(.white, in: RoundedRectangle(cornerRadius: 16))
+                    .shadow(color: .black.opacity(0.1), radius: 2, x: 2, y: 2)
                     
                 }
             }
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    HStack {
-                        Button {
 
-                        } label: {
-                            Image(systemName: "questionmark")
-                                .foregroundStyle(.black)
-                        }
-                    }
+            .sheet(isPresented: $workspace.isShowingHintSheet, content: {
+                if workspace.currentLevelIndex == 0 {
+                    Sheet1View(title: "Level One", hints: "Play the first few notes F4-E4-A4-A4-B4 of the song \"Dango Daikazoku\"!", imageName: "hint-1")
+                } else if workspace.currentLevelIndex == 1 {
+                    Sheet1View(title: "Level Two", hints: "Add more notes!")
+                } else if workspace.currentLevelIndex == 2 {
+                    Sheet1View(title: "Level Three", hints: "Are you seeing repeating notes? Try creating a function block to group notes together!", imageName: "hint-3")
+                } else if workspace.currentLevelIndex == 3 {
+                    Sheet1View(title: "Level Four", hints: "Add another Play Block")
+                } else if workspace.currentLevelIndex == 4 {
+                    Sheet1View(title: "Level Five", hints: "Complete the song \"Dango Daikazoku\"!")
                 }
-                
-                ToolbarItem(placement: .topBarTrailing) {
-                    HStack {
-                        Button {
-                            Task {
-                                await workspace.play()
-                            }
-                        } label: {
-                            Image(systemName: "play.fill")
-                                .foregroundStyle(.green)
-                        }
-                    }
+            })
+            .sheet(isPresented: $workspace.isShowingCompleteSheet, content: {
+                if workspace.currentLevelIndex == 0 {
+                    Congrats1View()
+                        .environmentObject(workspace)
+                } else if workspace.currentLevelIndex == 1 {
+                    Congrats1View()
+                        .environmentObject(workspace)
+                } else if workspace.currentLevelIndex == 2 {
+                    Congrats1View()
+                        .environmentObject(workspace)
+                } else if workspace.currentLevelIndex == 3 {
+                    Congrats1View()
+                        .environmentObject(workspace)
+                } else if workspace.currentLevelIndex == 4 {
+                    Text("Finished! Thanks for playing")
                 }
-            }
+            })
             .onAppear {
                 setupBlocks()
             }
@@ -204,6 +245,7 @@ struct BlocklyWorkspaceView: View {
         let play = PlayBlock(
             position: CGPoint(x: 200, y: 100)
         )
+        workspace.rightPlayBlockID = play.id
         
         let note1 = NoteBlock(
             position: CGPoint(x: 200, y: 200),
