@@ -8,12 +8,20 @@
 import SwiftUI
 
 struct StaffView: View {
-//    @Binding var baseOffset: Double // -18
-//    @Binding var spacing: Double    // 10
+//    @Binding var baseOffset: Double
+//    @Binding var spacing: Double
+//    @Binding var barYOffset: Double
+    
+    /*@Binding*/ var slashWidth: Double = 35.826
+    /*@Binding*/ var slashXOffset: Double = 11.855
+    /*@Binding*/ var slashYOffset: Double = 70.595
+    /*@Binding*/ var slashSpacing: Double = 4.992
+    
     @EnvironmentObject var workspace: BlockWorkspace
     var barHeight: Double = 62
-    var barYOffset: Double = 61
-    let song: [Note] = Song.song1
+    
+    var barYOffset: Double = 60.80
+    let song: [Note] = Song.song2
     let userNotes: [Note]
     let visibleNotes: [Bool]
     
@@ -24,12 +32,13 @@ struct StaffView: View {
     
     var body: some View {
         ZStack {
+            Color.white
             
             Image("stave")
                 .resizable()
                 .frame(width: 700, height: 120)
             
-            ScrollView(.horizontal, showsIndicators: true) {
+            ScrollView(.horizontal, showsIndicators: false) {
                 ZStack(alignment: .topLeading) {
 
                     // Measure lines
@@ -48,9 +57,25 @@ struct StaffView: View {
                             .opacity(0.4)
                             .scaledToFit()
                             .frame(width: 33, height: 71)
+                            .background {
+                                VStack(spacing: slashSpacing) {
+                                    Rectangle()
+                                        .fill(.black.opacity(0.4))   // blue
+                                        .frame(width: slashWidth, height: 3)
+                                        .opacity(note.pitch == .a4 || note.pitch == .c5 ? 1 : 0)
+                                    Rectangle()
+                                        .fill(.black.opacity(0.4)) // orange
+                                        .frame(width: slashWidth, height: 3)
+                                        .opacity(note.pitch == .b4 ? 1 : 0)
+                                    Rectangle()
+                                        .fill(.black.opacity(0.4)) // green
+                                        .frame(width: slashWidth, height: 3)
+                                        .opacity(note.pitch == .c5 ? 1 : 0)
+                                }
+                                .position(x: slashXOffset, y: slashYOffset)
+                            }
                             .position(
-//                                x: CGFloat(index) * noteSpacing + 100,
-                                x: xNoteOffset(song, index),   // 100 is inital base offset
+                                x: xNoteOffset(song, index),
                                 y: yForPitch(note.pitch)
                             )
                     }
@@ -78,17 +103,21 @@ struct StaffView: View {
                 }
                 .frame(width: timelineWidth(), height: 120)
                 .scrollTargetLayout()
-                .border(.orange)
+//                .border(.blue)
             }
             .frame(width: 700, height: 120)
+            .scrollClipDisabled()   // allow notes to overflow
+            .mask(
+                // Manually clip ONLY horizontal axis, allowing vertical overflow
+                Rectangle()
+                    .padding(.vertical, -200)   // increase vertical clip height
+                    .padding(.leading, 45)  // decrease leading clip for clef
+            )
+//            .border(.green)
             .scrollPosition($workspace.scrollPosition)
-            .onChange(of: workspace.scrollPosition) { oldValue, newValue in
-                // Observe changes in the scroll position
-                print("Scrolled to item ID: \(newValue)")
-            }
         }
         .frame(width: 700, height: 120)
-        .border(.blue)
+//        .border(.black)
     }
     
     func timelineWidth() -> CGFloat {
@@ -145,9 +174,9 @@ struct StaffView: View {
 //    }
     
     func yForPitch(_ pitch: Pitch) -> CGFloat {
-        let baseOffset: Double = -27.13    // where a4 is
+        let baseOffset: Double = -26.808
         let spacing: Double = 7.9578 // vertical offset between each pitch
-//        print("\(pitch): \((110 - (pitch.rawValue * spacing))) \(pitch.rawValue) \(baseOffset + (130 - (pitch.rawValue * spacing)))")
+
         return CGFloat(baseOffset + (110.0 - (Double(pitch.rawValue) * spacing)))
     }
     

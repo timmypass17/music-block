@@ -46,6 +46,20 @@ extension Song {
         Note(duration: .quarter, pitch: .e4),
         Note(duration: .quarter, pitch: .c4),
     ]
+    
+    static let song2: [Note] = [
+        Note(duration: .eighth, pitch: .f4),
+        Note(duration: .eighth, pitch: .e4),
+        Note(duration: .quarter, pitch: .a4),
+        Note(duration: .quarter, pitch: .a4),
+        Note(duration: .quarter, pitch: .b4),
+
+        Note(duration: .quarter, pitch: .b4),
+        Note(duration: .quarter, pitch: .c5),
+        Note(duration: .quarter, pitch: .a4),
+        Note(duration: .quarter, pitch: .e4),
+
+    ]
 //    static let song1: [Note] = [
 //        Note(duration: .quarter, pitch: .c3),
 //        Note(duration: .quarter, pitch: .d3),

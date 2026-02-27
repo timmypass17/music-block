@@ -82,8 +82,8 @@ struct DropdownNoteMenu: View {
                         SpriteView(
                             imageName: "notes",
                             index: noteBlock.note.pitch.index,
-                            spriteWidth: 490 / 13,
-                            spriteHeight: 109
+                            spriteWidth: 560 / 15,
+                            spriteHeight: 126
                         )
 //                        .offset(x: (490/2))
                         
@@ -135,8 +135,9 @@ struct DropdownNoteMenu: View {
 //    DropdownNoteMenu()
 //}
 
+// sharps: a, b, d, e
 enum Pitch: Int, CaseIterable, CustomStringConvertible {
-    case c3, d3, e3, f3, g3, a3, b3, c4, d4, e4, f4, g4, a4
+    case c3, d3, e3, f3, g3, a3, b3, c4, d4, e4, f4, g4, a4, b4, c5
     
     var index: Int {
         return self.rawValue
@@ -157,6 +158,8 @@ enum Pitch: Int, CaseIterable, CustomStringConvertible {
         case .f4: "F4"
         case .g4: "G4"
         case .a4: "A4"
+        case .b4: "B4"
+        case .c5: "C5"
         }
     }
 }
@@ -179,6 +182,6 @@ struct SpriteView: View {
     }
 
     var totalSprites: CGFloat {
-        13 // number of images inside the sprite sheet
+        15 // number of images inside the sprite sheet
     }
 }
