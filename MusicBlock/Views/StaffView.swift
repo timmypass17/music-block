@@ -63,7 +63,7 @@ struct StaffView: View {
                                     Rectangle()
                                         .fill(.black.opacity(0.4))   // blue
                                         .frame(width: slashWidth, height: 3)
-                                        .opacity(note.pitch == .a4 || note.pitch == .c5 ? 1 : 0)
+                                        .opacity(note.pitch == .a4 || note.pitch == .c5 || note.pitch == .c3 ? 1 : 0)
                                     Rectangle()
                                         .fill(.black.opacity(0.4)) // orange
                                         .frame(width: slashWidth, height: 3)
@@ -95,6 +95,26 @@ struct StaffView: View {
                             .offset(y: visibleNotes[index] ? 0 : -20)
                             .scaledToFit()
                             .frame(width: 33, height: 71)
+                            .background {
+                                VStack(spacing: slashSpacing) {
+                                    Rectangle()
+                                        .fill(getUserNoteColor(index))   // blue
+                                        .frame(width: slashWidth, height: 3)
+                                        .opacity(note.pitch == .a4 || note.pitch == .c5 || note.pitch == .c3 ? 1 : 0)
+                                    Rectangle()
+                                        .fill(getUserNoteColor(index)) // orange
+                                        .frame(width: slashWidth, height: 3)
+                                        .opacity(note.pitch == .b4 ? 1 : 0)
+                                    Rectangle()
+                                        .fill(getUserNoteColor(index)) // green
+                                        .frame(width: slashWidth, height: 3)
+                                        .opacity(note.pitch == .c5 ? 1 : 0)
+                                }
+                                .scaleEffect(visibleNotes[index] ? 1 : 0.7)
+                                .opacity(visibleNotes[index] ? 1 : 0)
+                                .animation(.spring(response: 0.25, dampingFraction: 0.6), value: visibleNotes[index])
+                                .position(x: slashXOffset, y: slashYOffset)
+                            }
                             .position(
                                 x: xNoteOffset(userNotes, index),
                                 y: yForPitch(note.pitch)

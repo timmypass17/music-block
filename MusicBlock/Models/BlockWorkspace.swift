@@ -46,7 +46,13 @@ class BlockWorkspace: ObservableObject {
     let otherAudioManager = AudioManager()
 
     var levels: [Level] = Level.all
-    @Published var currentLevelIndex = 0
+    @Published var currentLevelIndex = 0 {
+        didSet {
+            // Clear visible notes when going between levels
+            visibleNotes = Array(repeating: false, count: activeNotes.count)
+            otherVisibleNotes = Array(repeating: false, count: otherVisibleNotes.count)
+        }
+    }
     var currentLevel: Level {
         return levels[currentLevelIndex]
     }
@@ -134,6 +140,11 @@ class BlockWorkspace: ObservableObject {
         print("Final Result: \(res)")
         
         if res && !currentLevel.completed {
+            // Clear user's notes
+            visibleNotes = Array(repeating: false, count: activeNotes.count)
+            otherVisibleNotes = Array(repeating: false, count: otherVisibleNotes.count)
+            
+            // Go to next level
             levels[currentLevelIndex].completed = true
             isShowingCompleteSheet = true
         }
