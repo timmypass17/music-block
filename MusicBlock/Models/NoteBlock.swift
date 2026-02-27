@@ -22,19 +22,4 @@ struct NoteBlock: Block {
     var next: UUID? = nil
     
     var note: Note
-    
-    func play() async {
-        print("play(\(note.duration), \(note.pitch.description))")
-
-        do {
-            if let url = Bundle.main.url(forResource: "C4", withExtension: "mp3") {
-                let player = try AVAudioPlayer(contentsOf: url)
-                player.play()
-                try await Task.sleep(for: .seconds(note.duration.rawValue))
-                player.stop()
-            }
-        } catch {
-            print("Error getting audio: \(error)")
-        }
-    }
 }

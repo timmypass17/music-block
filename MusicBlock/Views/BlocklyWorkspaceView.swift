@@ -60,12 +60,16 @@ struct BlocklyWorkspaceView: View {
                         Spacer()
                         
                         Button {
-                            Task {
-                                await workspace.play()
+                            if workspace.currentlyPlaying {
+                                workspace.playTask?.cancel()
+                            } else {
+                                workspace.playTask = Task {
+                                    await workspace.play()
+                                }
                             }
                         } label: {
-                            Image(systemName: "play.fill")
-                                .foregroundStyle(.green)
+                            Image(systemName: workspace.currentlyPlaying ? "arrow.trianglehead.counterclockwise" : "play.fill")
+                                .foregroundStyle(workspace.currentlyPlaying ? .red : .green)
                                 .frame(width: 30, height: 30)
                                 .padding(4)
                                 .background(.white, in: RoundedRectangle(cornerRadius: 16))
@@ -234,6 +238,10 @@ struct BlocklyWorkspaceView: View {
                 } else if workspace.currentLevelIndex == 4 {
                     Text("Finished! Thanks for playing")
                 }
+            })
+            .sheet(isPresented: $workspace.isShowingInfiniteLoopError, content: {
+                Text("Infinite loop detected!\nThis is caused by functions calling themselves, causing an infinite amount of iterations.\nTry breaking up that function so that it doesn't call itself!")
+                    .padding()
             })
             .onAppear {
                 setupBlocks()

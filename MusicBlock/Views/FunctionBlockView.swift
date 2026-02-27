@@ -34,8 +34,7 @@ struct FunctionBlockView: View {
                             RoundedRectangle(cornerRadius: 8)
                                 .fill(.regularMaterial) 
                         )
-                        .onSubmit(of: .text, {
-                            print("onSubmit: \(name)")
+                        .onChange(of: name) {
                             // Create option (if not created yet)
                             if workspace.functionBlockOptions[blockID] == nil {
                                 workspace.functionBlockOptions[blockID] = FunctionBlockData(functionBlockID: blockID)
@@ -45,9 +44,6 @@ struct FunctionBlockView: View {
                                 functionBlock.name = name
                                 workspace.blocks[blockID] = functionBlock
                             }
-                        })
-                        .onChange(of: name) {
-                            print(name)
                         }
                 }
                 .padding()

@@ -33,9 +33,11 @@ class BlockWorkspace: ObservableObject {
     }
     @Published var otherVisibleNotes: [Bool] = []
     
-    
     @Published var scrollPosition = ScrollPosition(idType: Note.ID.self)
     @Published var otherScrollPosition = ScrollPosition(idType: Note.ID.self)
+    
+    @Published var currentlyPlaying = false
+    var playTask: Task<Void, Never>?
 
     @Published var functionBlockOptions: [UUID: FunctionBlockData] = [:]
     
@@ -58,6 +60,7 @@ class BlockWorkspace: ObservableObject {
     }
     @Published var isShowingHintSheet = false
     @Published var isShowingCompleteSheet = false
+    @Published var isShowingInfiniteLoopError = false
     
     var rightPlayBlockID: UUID = UUID()
     var leftPlayBlockID: UUID?
@@ -101,6 +104,28 @@ class BlockWorkspace: ObservableObject {
     }
     
     func play() async {
+        guard !currentlyPlaying else { return }
+        
+        // Check for loop
+        if hasInfiniteLoop(rightPlayBlockID) {
+            // Show error message
+            print("Right hand has potentially infinite loop")
+            isShowingInfiniteLoopError = true
+            return
+        }
+        
+        if let leftPlayBlockID, hasInfiniteLoop(leftPlayBlockID) {
+            print("Left hand has potentially infinite loop")
+            isShowingInfiniteLoopError = true
+            return
+        }
+        
+        currentlyPlaying = true
+        
+        defer {
+            currentlyPlaying = false
+        }
+        
         let expectedNotes: [Note] = currentLevel.notes
         let otherExpectedNotes: [Note] = currentLevel.otherNotes
 
@@ -130,6 +155,9 @@ class BlockWorkspace: ObservableObject {
         async let passed1 = playNotes(notes, expectedNotes, true)
         async let passed2 = playNotes(otherNotes, otherExpectedNotes, false)
         let (result1, result2) = await (passed1, passed2)
+        
+        if Task.isCancelled { return }
+        
         print("Results1: \(result1)")
         print("Results2: \(result2)")
 
@@ -149,12 +177,42 @@ class BlockWorkspace: ObservableObject {
             isShowingCompleteSheet = true
         }
     }
+
+    func hasInfiniteLoop(_ head: UUID?) -> Bool {
+        var count = 0
+        return hasInfiniteLoopInternal(head, count: &count)
+    }
+
+    private func hasInfiniteLoopInternal(_ head: UUID?, count: inout Int) -> Bool {
+        var current = head
+
+        while let cid = current, count < 100 {
+            if blocks[cid] is NoteBlock {
+                count += 1
+            } else if let functionInstBlock = blocks[cid] as? FunctionInstanceBlock,
+                      let functionBlockID = functionInstBlock.functionBlockID,
+                      let functionBlock = blocks[functionBlockID] {
+
+                count += 1
+                if hasInfiniteLoopInternal(functionBlock.next, count: &count) {
+                    return true
+                }
+            }
+
+            current = blocks[cid]?.next
+        }
+
+        return count >= 100
+    }
+    
     
     func playNotes(_ notes: [Note], _ expectedNotes: [Note], _ isRightHand: Bool) async -> Bool {
         let staffLength = 700
         var passed: Bool = true
 
         for (index, note) in notes.enumerated() {
+            if Task.isCancelled { return false }
+            
             // Ensure animation always plays
             withAnimation(.smooth(duration: note.duration.rawValue)) {
                 if isRightHand {
@@ -192,6 +250,11 @@ class BlockWorkspace: ObservableObject {
     }
     
     func connect(parent: UUID, child: UUID) {
+//        if blocks[child] is FunctionInstanceBlock {
+//            // Check for recursive function
+//            
+//        }
+            
         let temp = blocks[parent]?.next
         blocks[parent]?.next = child
         blocks[child]?.previous = parent
