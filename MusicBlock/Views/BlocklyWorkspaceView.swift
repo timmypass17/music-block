@@ -55,6 +55,13 @@ struct BlocklyWorkspaceView: View {
 //                            .buttonStyle(.plain)
                             .disabled(!workspace.levels[i].available)
                             .opacity(workspace.levels[i].available ? 1 : 0.4)
+
+                            if i < 4 {
+                                Rectangle()
+                                    .fill(.gray.opacity(0.3))
+                                    .frame(width: 10, height: 2)
+                            }
+                            
                         }
                         
                         Spacer()
@@ -247,27 +254,34 @@ struct BlocklyWorkspaceView: View {
                 Text("Infinite loop detected!\nThis is caused by functions calling themselves, causing an infinite amount of iterations.\nTry breaking up that function so that it doesn't call itself!")
                     .padding()
             })
-            .onAppear {
-                setupBlocks()
+            // task runs after layout is computed, so geo will have the correct size.
+            .task {
+                setupBlocks(geo)
             }
+//            .onAppear {
+//                setupBlocks(geo)
+//            }
         }
     }
     
-    func setupBlocks() {
+    func setupBlocks(_ geo: GeometryProxy) {
         let play = PlayBlock(
-            position: CGPoint(x: 200, y: 100)
+            position: CGPoint(x: geo.size.width / 2 - 75, y: geo.size.height / 2 - 50)
         )
         workspace.rightPlayBlockID = play.id
         
         let note1 = NoteBlock(
-            position: CGPoint(x: 200, y: 200),
+            position: CGPoint(x: geo.size.width / 2 + 150, y: geo.size.height / 2 + 75),
             note: Note(duration: .quarter, pitch: .c4)
         )
         
         let note2 = NoteBlock(
-            position: CGPoint(x: 200, y: 400),
+            position: CGPoint(x: geo.size.width / 2, y: geo.size.height / 2 + 250),
             note: Note(duration: .quarter, pitch: .d4)
         )
+        
+        print(note1.id)
+        print(note2.id)
         
         workspace.addBlock(play)
         workspace.addBlock(note1)

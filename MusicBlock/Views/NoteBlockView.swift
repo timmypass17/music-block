@@ -53,6 +53,13 @@ struct NoteBlockView: View {
 //                .border(.orange)
             }
             .position(noteBlock.position)
+            .brightness(
+                workspace.noteBlockIDBeingPlayed == noteBlock.id ||
+                workspace.otherNoteBlockIDBeingPlayed == noteBlock.id
+                ? 0.25
+                : 0
+            )
+//            .opacity(workspace.noteBlockIDBeingPlayed == noteBlock.id || workspace.otherNoteBlockIDBeingPlayed == noteBlock.id ? 0.3 :  1)
             .gesture(
                 DragGesture()
                     .onChanged { value in

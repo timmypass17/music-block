@@ -52,6 +52,9 @@ class BlockWorkspace: ObservableObject {
     @Published var isShowingCompleteSheet = false
     @Published var isShowingInfiniteLoopError = false
     
+    @Published var noteBlockIDBeingPlayed: UUID? = nil
+    @Published var otherNoteBlockIDBeingPlayed: UUID? = nil
+
     var rightPlayBlockID: UUID = UUID()
     var leftPlayBlockID: UUID?
     
@@ -60,7 +63,7 @@ class BlockWorkspace: ObservableObject {
         return playBlockCount < 2
     }
 
-    func getUserNotes(playBlockID: UUID) -> [Note] {
+    func getUserNoteBlocks(playBlockID: UUID) -> [NoteBlock] {
         // Find play block
         guard let playBlock = blocks.first(where: { $0.key == playBlockID })?.value as? PlayBlock else {
             print("Fail to find play block")
@@ -68,11 +71,11 @@ class BlockWorkspace: ObservableObject {
         }
         
         // Start notes
-        return getUserNotes(playBlock.next)
+        return getUserNoteBlocks(playBlock.next)
     }
     
-    func getUserNotes(_ head: UUID?) -> [Note] {
-        var notes: [Note] = []
+    func getUserNoteBlocks(_ head: UUID?) -> [NoteBlock] {
+        var notes: [NoteBlock] = []
         
         // Iterate through linked list
         var current: UUID? = head
@@ -80,13 +83,13 @@ class BlockWorkspace: ObservableObject {
         while let cid = current {
             // play block code
             if let noteBlock = blocks[cid] as? NoteBlock {
-                notes.append(noteBlock.note)
+                notes.append(noteBlock)
             } else if let functionInstBlock = blocks[cid] as? FunctionInstanceBlock,
                       let functionBlockID = functionInstBlock.functionBlockID,
                       let functionBlock = blocks.first(where: { $0.key == functionBlockID })
             {
                 // Get notes starting at function
-                notes.append(contentsOf: getUserNotes(functionBlock.value.next))
+                notes.append(contentsOf: getUserNoteBlocks(functionBlock.value.next))
             }
             current = blocks[cid]?.next
         }
@@ -109,45 +112,52 @@ class BlockWorkspace: ObservableObject {
             isShowingInfiniteLoopError = true
             return
         }
-        
-        currentlyPlaying = true
-        
+                
         defer {
             currentlyPlaying = false
+            noteBlockIDBeingPlayed = nil
+            otherNoteBlockIDBeingPlayed = nil
+//            print("Set notes being played to nil")
         }
         
         let expectedNotes: [Note] = currentLevel.notes
         let otherExpectedNotes: [Note] = currentLevel.otherNotes
 
-        let notes: [Note] = getUserNotes(playBlockID: rightPlayBlockID)
-        activeNotes = notes
+        let noteBlocks: [NoteBlock] = getUserNoteBlocks(playBlockID: rightPlayBlockID)
+        activeNotes = noteBlocks.map { $0.note }
         visibleNotes = Array(repeating: false, count: activeNotes.count)
         
-        let otherNotes: [Note]
+        let otherNoteBlocks: [NoteBlock]
         if let leftPlayBlockID {
-            otherNotes = getUserNotes(playBlockID: leftPlayBlockID)
+            otherNoteBlocks = getUserNoteBlocks(playBlockID: leftPlayBlockID)
         } else {
-            otherNotes = []
+            otherNoteBlocks = []
         }
-        otherActiveNotes = otherNotes
+        otherActiveNotes = otherNoteBlocks.map { $0.note }
         otherVisibleNotes = Array(repeating: false, count: otherActiveNotes.count)
 
+        if noteBlocks.isEmpty && otherNoteBlocks.isEmpty {
+            return
+        }
+        
+        currentlyPlaying = true
+        
         var res: Bool = true
         
-        if notes.count != expectedNotes.count {
-            print("Right hand notes have different counts \(notes.count) != \(expectedNotes.count)")
+        if noteBlocks.count != expectedNotes.count {
+            print("Right hand notes have different counts \(noteBlocks.count) != \(expectedNotes.count)")
             res = false
         }
         
-        if otherNotes.count != otherExpectedNotes.count {
-            print("Left hand notes have different counts \(otherNotes.count) != \(otherExpectedNotes.count)")
+        if noteBlocks.count != otherExpectedNotes.count {
+            print("Left hand notes have different counts \(noteBlocks.count) != \(otherExpectedNotes.count)")
             res = false
         }
         
         try? await Task.sleep(for: .seconds(0.1))   // need slight delay to give first note chance to animate
         
-        async let passed1 = playNotes(notes, expectedNotes, true)
-        async let passed2 = playNotes(otherNotes, otherExpectedNotes, false)
+        async let passed1 = playNotes(noteBlocks, expectedNotes, true)
+        async let passed2 = playNotes(otherNoteBlocks, otherExpectedNotes, false)
         let (result1, result2) = await (passed1, passed2)
         
         if Task.isCancelled { return }
@@ -203,32 +213,34 @@ class BlockWorkspace: ObservableObject {
     }
     
     
-    func playNotes(_ notes: [Note], _ expectedNotes: [Note], _ isRightHand: Bool) async -> Bool {
+    func playNotes(_ noteBlocks: [NoteBlock], _ expectedNotes: [Note], _ isRightHand: Bool) async -> Bool {
         let staffLength = 700
         var passed: Bool = true
 
-        for (index, note) in notes.enumerated() {
+        for (index, noteBlock) in noteBlocks.enumerated() {
             if Task.isCancelled { return false }
-            
+
             // Ensure animation always plays
-            withAnimation(.smooth(duration: note.duration.rawValue)) {
+            withAnimation(.smooth(duration: noteBlock.note.duration.rawValue)) {
                 if isRightHand {
                     visibleNotes[index] = true
-                    scrollPosition.scrollTo(x: xNoteOffset(notes, index) - CGFloat((staffLength / 2)))
+                    scrollPosition.scrollTo(x: xNoteOffset(noteBlocks.map { $0.note }, index) - CGFloat((staffLength / 2)))
                 } else {
                     otherVisibleNotes[index] = true
-                    otherScrollPosition.scrollTo(x: xNoteOffset(notes, index) - CGFloat((staffLength / 2)))
+                    otherScrollPosition.scrollTo(x: xNoteOffset(noteBlocks.map { $0.note}, index) - CGFloat((staffLength / 2)))
                 }
             }
             
             if isRightHand {
-                await audioManager.play(pitch: note.pitch, duration: note.duration)
+                noteBlockIDBeingPlayed = noteBlock.id
+                await audioManager.play(pitch: noteBlock.note.pitch, duration: noteBlock.note.duration)
             } else {
-                await otherAudioManager.play(pitch: note.pitch, duration: note.duration)
+                otherNoteBlockIDBeingPlayed = noteBlock.id
+                await otherAudioManager.play(pitch: noteBlock.note.pitch, duration: noteBlock.note.duration)
             }
             
             if index < expectedNotes.count {
-                if note != expectedNotes[index] {
+                if noteBlock.note != expectedNotes[index] {
                     passed = false
                 }
             }

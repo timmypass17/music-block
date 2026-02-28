@@ -21,7 +21,7 @@ struct Level {
 
 extension Level {
     static let all: [Level] = [
-        Level(notes: Note.otherLevelFive, otherNotes: Note.otherLevelFive, enableFunctionBlock: false, available: true, completed: false, description: """
+        Level(notes: Note.otherLevelZero, otherNotes: Note.otherLevelFour, enableFunctionBlock: false, available: true, completed: false, description: """
             ✅ Goal: Play the opening notes **F4–E4–A4–A4–B4** from *Dango Daikazoku*!
 
             1. Tap **Note Block** at the bottom to add notes, then drag blocks together to build the melody.
