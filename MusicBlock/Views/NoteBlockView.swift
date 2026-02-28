@@ -12,6 +12,7 @@ struct NoteBlockView: View {
     let blockID: UUID
     
     @State private var dragOffset: CGSize = .zero
+    @State var isExpanded = false
     
     var noteBlock: NoteBlock {
         workspace.blocks[blockID] as! NoteBlock
@@ -27,7 +28,7 @@ struct NoteBlockView: View {
                     Text("play")
                         .foregroundStyle(.white)
 //                        .border(.red)
-                    DropdownMenu(blockID: blockID, dropDownAlignment: .trailing, fromTop: false, options: [
+                    DropdownMenu(isExpanded: $isExpanded, blockID: blockID, dropDownAlignment: .trailing, fromTop: false, options: [
                         DropdownOption(duration: .whole, action: { print("Details") }),
                         DropdownOption(duration: .half, action: { print("Details") }),
                         DropdownOption(duration: .quarter, action: { print("Details") }),
@@ -66,6 +67,9 @@ struct NoteBlockView: View {
                         workspace.trySnap(blockID)
                     }
             )
+//            .onChange(of: noteBlock.position) { oldValue, newValue in
+//                isExpanded = false
+//            }
     }
 }
 

@@ -22,8 +22,8 @@ struct BlocklyWorkspaceView: View {
     var body: some View {
         GeometryReader { geo in
             ZStack {
-                Color.white
-//                Color.gray.opacity(0.1).ignoresSafeArea()
+//                Color.white
+                Color.gray.opacity(0.1).ignoresSafeArea()
                 
                 VStack(spacing: 64) {
                     HStack(spacing: 16) {
@@ -129,7 +129,7 @@ struct BlocklyWorkspaceView: View {
                 
                 VStack {
                     Spacer()
-                    HStack {
+                    HStack(spacing: 24) {
                         Button {
                             let center = CGPoint(
                                 x: geo.size.width / 2,
@@ -199,9 +199,11 @@ struct BlocklyWorkspaceView: View {
                                 }
                             }
                             .disabled(!workspace.enablePlayBlockButton)
+                            .opacity(workspace.enablePlayBlockButton ? 1 : 0.4)
                         }
                     }
                     .padding()
+                    .frame(height: 50)
                     .foregroundStyle(.black)
                     .background(.white, in: RoundedRectangle(cornerRadius: 16))
                     .shadow(color: .black.opacity(0.1), radius: 2, x: 2, y: 2)
@@ -211,32 +213,34 @@ struct BlocklyWorkspaceView: View {
 
             .sheet(isPresented: $workspace.isShowingHintSheet, content: {
                 if workspace.currentLevelIndex == 0 {
-                    Sheet1View(title: "Level One", hints: "Play the first few notes F4-E4-A4-A4-B4 of the song \"Dango Daikazoku\"!", imageName: "hint-1")
+                    Sheet1View(title: "Level One", hints: Level.all[0].description, imageName: "hint-1")
                 } else if workspace.currentLevelIndex == 1 {
-                    Sheet1View(title: "Level Two", hints: "Add more notes!")
+                    Sheet1View(title: "Level Two", hints: Level.all[1].description)
                 } else if workspace.currentLevelIndex == 2 {
-                    Sheet1View(title: "Level Three", hints: "Are you seeing repeating notes? Try creating a function block to group notes together!", imageName: "hint-3")
+                    Sheet1View(title: "Level Three",
+                               hints: Level.all[2].description,
+                               imageName: "hint-3")
                 } else if workspace.currentLevelIndex == 3 {
-                    Sheet1View(title: "Level Four", hints: "Add another Play Block")
+                    Sheet1View(title: "Level Four", hints: Level.all[3].description)
                 } else if workspace.currentLevelIndex == 4 {
-                    Sheet1View(title: "Level Five", hints: "Complete the song \"Dango Daikazoku\"!")
+                    Sheet1View(title: "Level Five", hints: Level.all[4].description)
                 }
             })
             .sheet(isPresented: $workspace.isShowingCompleteSheet, content: {
                 if workspace.currentLevelIndex == 0 {
-                    Congrats1View()
+                    Congrats1View(title: "⭐️ Level One Complete")
                         .environmentObject(workspace)
                 } else if workspace.currentLevelIndex == 1 {
-                    Congrats1View()
+                    Congrats1View(title: "⭐️ Level Two Complete")
                         .environmentObject(workspace)
                 } else if workspace.currentLevelIndex == 2 {
-                    Congrats1View()
+                    Congrats1View(title: "⭐️ Level Three Complete")
                         .environmentObject(workspace)
                 } else if workspace.currentLevelIndex == 3 {
-                    Congrats1View()
+                    Congrats1View(title: "⭐️ Level Four Complete")
                         .environmentObject(workspace)
                 } else if workspace.currentLevelIndex == 4 {
-                    Text("Finished! Thanks for playing")
+                    Congrats1View(title: "⭐️ Level Five Complete", lastLevel: true)
                 }
             })
             .sheet(isPresented: $workspace.isShowingInfiniteLoopError, content: {

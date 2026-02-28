@@ -9,18 +9,24 @@ import SwiftUI
 
 struct Congrats1View: View {
     @EnvironmentObject var workspace: BlockWorkspace
-
+    var title: String
+    var lastLevel: Bool = false
+    
     var body: some View {
         VStack {
-            Text("Level Complete")
+            Text(title)
                 .font(.title)
-            Button {
-                workspace.isShowingCompleteSheet = false
-                workspace.currentLevelIndex = min(workspace.currentLevelIndex + 1, workspace.levels.count)
-                workspace.levels[workspace.currentLevelIndex].available = true
-                workspace.isShowingHintSheet = true
-            } label: {
-                Text("Next")
+            
+            if lastLevel {
+                Text("Thanks for playing!")
+            } else {
+                Button {
+                    workspace.isShowingCompleteSheet = false
+                    workspace.isShowingHintSheet = true
+                } label: {
+                    Text("Next Level")
+                }
+                .buttonStyle(.borderedProminent)
             }
 
         }
@@ -28,6 +34,6 @@ struct Congrats1View: View {
     }
 }
 
-#Preview {
-    Congrats1View()
-}
+//#Preview {
+//    Congrats1View()
+//}

@@ -39,7 +39,7 @@ struct StaffView: View {
                 .resizable()
                 .frame(width: 700, height: 120)
             
-            ScrollView(.horizontal, showsIndicators: false) {
+            ScrollView(.horizontal, showsIndicators: true) {
                 ZStack(alignment: .topLeading) {
 
                     // Measure lines
@@ -142,7 +142,9 @@ struct StaffView: View {
     }
     
     func timelineWidth() -> CGFloat {
-        CGFloat(notes.count) * noteSpacing + 200
+        // Choose length of song's notes or user's input note
+        let staffLength = 700
+        return max(xNoteOffset(notes, notes.count - 1), xNoteOffset(userNotes, userNotes.count - 1)) + CGFloat(Double(staffLength) * 0.65) // extra spacing
     }
     
     func getUserNoteColor(_ index: Int) -> Color {

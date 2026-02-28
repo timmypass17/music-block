@@ -10,7 +10,7 @@ import SwiftUI
 struct DropdownMenu: View {
     @EnvironmentObject var workspace: BlockWorkspace
 //    @Binding var selectedNote: NoteDuration
-    @State var isExpanded = false
+    @Binding var isExpanded: Bool
     @State var menuWidth: CGFloat = 0
     let blockID: UUID
     var icon = "ellipsis"

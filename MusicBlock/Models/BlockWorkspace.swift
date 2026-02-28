@@ -17,20 +17,10 @@ struct FunctionBlockData {
 class BlockWorkspace: ObservableObject {
     @Published var blocks: [UUID: any Block] = [:]
     @Published var selectedBlockID: UUID? = nil
-    @Published var activeNotes: [Note] = [] {
-        didSet {
-            print("Did set active notes")
-            visibleNotes = Array(repeating: false, count: activeNotes.count)
-        }
-    }
+    @Published var activeNotes: [Note] = []
     @Published var visibleNotes: [Bool] = []
     
-    @Published var otherActiveNotes: [Note] = [] {
-        didSet {
-            print("Did set other active notes")
-            otherVisibleNotes = Array(repeating: false, count: otherActiveNotes.count)
-        }
-    }
+    @Published var otherActiveNotes: [Note] = []
     @Published var otherVisibleNotes: [Bool] = []
     
     @Published var scrollPosition = ScrollPosition(idType: Note.ID.self)
@@ -58,7 +48,7 @@ class BlockWorkspace: ObservableObject {
     var currentLevel: Level {
         return levels[currentLevelIndex]
     }
-    @Published var isShowingHintSheet = false
+    @Published var isShowingHintSheet = true
     @Published var isShowingCompleteSheet = false
     @Published var isShowingInfiniteLoopError = false
     
@@ -131,6 +121,7 @@ class BlockWorkspace: ObservableObject {
 
         let notes: [Note] = getUserNotes(playBlockID: rightPlayBlockID)
         activeNotes = notes
+        visibleNotes = Array(repeating: false, count: activeNotes.count)
         
         let otherNotes: [Note]
         if let leftPlayBlockID {
@@ -139,7 +130,8 @@ class BlockWorkspace: ObservableObject {
             otherNotes = []
         }
         otherActiveNotes = otherNotes
-        
+        otherVisibleNotes = Array(repeating: false, count: otherActiveNotes.count)
+
         var res: Bool = true
         
         if notes.count != expectedNotes.count {
@@ -151,6 +143,8 @@ class BlockWorkspace: ObservableObject {
             print("Left hand notes have different counts \(otherNotes.count) != \(otherExpectedNotes.count)")
             res = false
         }
+        
+        try? await Task.sleep(for: .seconds(0.1))   // need slight delay to give first note chance to animate
         
         async let passed1 = playNotes(notes, expectedNotes, true)
         async let passed2 = playNotes(otherNotes, otherExpectedNotes, false)
@@ -175,6 +169,9 @@ class BlockWorkspace: ObservableObject {
             // Go to next level
             levels[currentLevelIndex].completed = true
             isShowingCompleteSheet = true
+            
+            currentLevelIndex = min(currentLevelIndex + 1, levels.count)
+            levels[currentLevelIndex].available = true
         }
     }
 

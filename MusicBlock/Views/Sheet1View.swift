@@ -18,8 +18,9 @@ struct Sheet1View: View {
                 Color.white
                 VStack {
                     Text(title)
-                        .font(.title)
-                    Text(hints)
+                        .font(.system(size: 40))
+                    Text(.init(hints))  // enables markdown for bold and italicize
+                        .padding(.vertical)
                                     
                     if let imageName {
                         Image(imageName)
@@ -28,7 +29,7 @@ struct Sheet1View: View {
                             .frame(height: geo.size.height * 0.4)
                     }
                 }
-                .padding()
+                .padding(32)
             }
         }
     }
