@@ -149,8 +149,8 @@ class BlockWorkspace: ObservableObject {
             res = false
         }
         
-        if noteBlocks.count != otherExpectedNotes.count {
-            print("Left hand notes have different counts \(noteBlocks.count) != \(otherExpectedNotes.count)")
+        if otherNoteBlocks.count != otherExpectedNotes.count {
+            print("Left hand notes have different counts \(otherNoteBlocks.count) != \(otherExpectedNotes.count)")
             res = false
         }
         
@@ -162,6 +162,7 @@ class BlockWorkspace: ObservableObject {
         
         if Task.isCancelled { return }
         
+        print("Result: \(res)")
         print("Results1: \(result1)")
         print("Results2: \(result2)")
 
@@ -172,6 +173,7 @@ class BlockWorkspace: ObservableObject {
         print("Final Result: \(res)")
         
         if res && !currentLevel.completed {
+            print("Completed level")
             // Clear user's notes
             visibleNotes = Array(repeating: false, count: activeNotes.count)
             otherVisibleNotes = Array(repeating: false, count: otherVisibleNotes.count)

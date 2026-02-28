@@ -140,7 +140,7 @@ struct BlocklyWorkspaceView: View {
                         Button {
                             let center = CGPoint(
                                 x: geo.size.width / 2,
-                                y: geo.size.height / 2
+                                y: geo.size.height - 200
                             )
                             
                             let note = NoteBlock(
@@ -161,7 +161,7 @@ struct BlocklyWorkspaceView: View {
                                 // Add function block
                                 let center = CGPoint(
                                     x: geo.size.width / 2,
-                                    y: geo.size.height / 2
+                                    y: geo.size.height / 2 - 200
                                 )
                                 
                                 let functionBlock = FunctionBlock(
@@ -173,7 +173,7 @@ struct BlocklyWorkspaceView: View {
                                 // Add function block instance
                                 let center = CGPoint(
                                     x: geo.size.width / 2,
-                                    y: geo.size.height / 2
+                                    y: geo.size.height / 2 - 200
                                 )
                                 
                                 let functionInstanceBlock = FunctionInstanceBlock(
@@ -191,7 +191,7 @@ struct BlocklyWorkspaceView: View {
                             Button {
                                 let center = CGPoint(
                                     x: geo.size.width / 2,
-                                    y: geo.size.height / 2
+                                    y: geo.size.height / 2 - 200
                                 )
                                 
                                 let playBlock = PlayBlock(

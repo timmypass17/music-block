@@ -88,7 +88,7 @@ struct DropdownFunctionMenu: View {
             }
         }
 //        .frame(width: 30, height: 30)
-        .animation(.smooth, value: isExpanded)
+//        .animation(.smooth, value: isExpanded)
     }
 }
 

@@ -41,7 +41,7 @@ extension Note {
         
         Note(duration: .quarter, pitch: .b4),
         Note(duration: .quarter, pitch: .c5),
-        Note(duration: .quarter, pitch: .b4),
+        Note(duration: .quarter, pitch: .a4),
         Note(duration: .quarter, pitch: .e4),
     ]
     
@@ -56,7 +56,7 @@ extension Note {
         
         Note(duration: .quarter, pitch: .b4),
         Note(duration: .quarter, pitch: .c5),
-        Note(duration: .quarter, pitch: .b4),
+        Note(duration: .quarter, pitch: .a4),
         Note(duration: .quarter, pitch: .e4),
         
         Note(duration: .eighth, pitch: .f4),
@@ -81,7 +81,7 @@ extension Note {
         
         Note(duration: .quarter, pitch: .b4),
         Note(duration: .quarter, pitch: .c5),
-        Note(duration: .quarter, pitch: .b4),
+        Note(duration: .quarter, pitch: .a4),
         Note(duration: .quarter, pitch: .e4),
         
         Note(duration: .eighth, pitch: .f4),
@@ -97,30 +97,69 @@ extension Note {
     
     static let otherLevelFour: [Note] = [
         Note(duration: .half, pitch: .d3),
-        Note(duration: .half, pitch: .f3)
+        Note(duration: .half, pitch: .f3),
+        
+        Note(duration: .half, pitch: .c3),
+        Note(duration: .half, pitch: .f3),
+        
+        Note(duration: .half, pitch: .d3),
+        Note(duration: .half, pitch: .f3),
+        
+        Note(duration: .half, pitch: .c3),
+        Note(duration: .half, pitch: .g3),
     ]
     
     static let levelFive: [Note] = [
+        // m1
         Note(duration: .eighth, pitch: .f4),
         Note(duration: .eighth, pitch: .e4),
         Note(duration: .quarter, pitch: .a4),
         Note(duration: .quarter, pitch: .a4),
         Note(duration: .quarter, pitch: .b4),
         
+        // m2
         Note(duration: .quarter, pitch: .b4),
         Note(duration: .quarter, pitch: .c5),
-        Note(duration: .quarter, pitch: .b4),
+        Note(duration: .quarter, pitch: .a4),
         Note(duration: .quarter, pitch: .e4),
         
+        // m1
         Note(duration: .eighth, pitch: .f4),
         Note(duration: .eighth, pitch: .e4),
         Note(duration: .quarter, pitch: .a4),
         Note(duration: .quarter, pitch: .a4),
         Note(duration: .quarter, pitch: .b4),
         
+        // end1
         Note(duration: .quarter, pitch: .b4),
         Note(duration: .quarter, pitch: .c5),
         Note(duration: .half, pitch: .b4),
+        
+        // second half
+        
+        // m1
+        Note(duration: .eighth, pitch: .f4),
+        Note(duration: .eighth, pitch: .e4),
+        Note(duration: .quarter, pitch: .a4),
+        Note(duration: .quarter, pitch: .a4),
+        Note(duration: .quarter, pitch: .b4),
+        
+        // m2
+        Note(duration: .quarter, pitch: .b4),
+        Note(duration: .quarter, pitch: .c5),
+        Note(duration: .quarter, pitch: .a4),
+        Note(duration: .quarter, pitch: .e4),
+        
+        // m1
+        Note(duration: .eighth, pitch: .f4),
+        Note(duration: .eighth, pitch: .e4),
+        Note(duration: .quarter, pitch: .a4),
+        Note(duration: .quarter, pitch: .a4),
+        Note(duration: .quarter, pitch: .b4),
+        
+        // end2
+        Note(duration: .half, pitch: .a4),
+        Note(duration: .half, pitch: .e4),
     ]
     
     static let otherLevelFive: [Note] = [
@@ -134,7 +173,21 @@ extension Note {
         Note(duration: .half, pitch: .f3),
         
         Note(duration: .half, pitch: .c3),
+        Note(duration: .half, pitch: .g3),
+        
+        // second half
+        Note(duration: .half, pitch: .d3),
+        Note(duration: .half, pitch: .f3),
+        
+        Note(duration: .half, pitch: .c3),
+        Note(duration: .half, pitch: .f3),
+        
+        Note(duration: .half, pitch: .d3),
+        Note(duration: .half, pitch: .f3),
+        
         Note(duration: .half, pitch: .a3),
+        Note(duration: .half, pitch: .g3),
+        
     ]
     
 }

@@ -127,7 +127,7 @@ struct DropdownNoteMenu: View {
         .frame(width: 30, height: 30)
 //        .frame(width: menuWidth)
 //        .frame(maxWidth: .infinity, alignment: frameAlignment)
-        .animation(.smooth, value: isExpanded)
+//        .animation(.smooth, value: isExpanded)
     }
 }
 
